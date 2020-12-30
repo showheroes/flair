@@ -46,13 +46,13 @@ for entity in sentence.get_spans('ner'):
 
 This should print:
 ```console
-PER-span [1,2]: "George Washington"
-LOC-span [5]: "Washington"
+Span [1,2]: "George Washington"   [− Labels: PER (0.9968)]
+Span [5]: "Washington"   [− Labels: LOC (0.9994)]
 ```
 
 Which indicates that "George Washington" is a person (PER) and "Washington" is
-a location (LOC). Each such `Span` has a text, a tag value, its position
-in the sentence and "score" that indicates how confident the tagger is that the prediction is correct.
+a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
+with a value and a score (confidence in the prediction). 
 You can also get additional information, such as the position offsets of
 each entity in the sentence by calling:
 
@@ -69,6 +69,29 @@ This should print:
     ]}
 ```
 
+
+### Multi-Tagging 
+
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
+For this, you can use our new `MultiTagger` object, like this: 
+
+```python
+from flair.models import MultiTagger
+
+# load tagger for POS and NER 
+tagger = MultiTagger.load(['pos', 'ner'])
+
+# make example sentence
+sentence = Sentence("George Washington went to Washington.")
+
+# predict with both models
+tagger.predict(sentence)
+
+print(sentence)
+``` 
+
+The sentence now has two types of annotation: POS and NER. 
+
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
@@ -80,10 +103,14 @@ are provided:
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
+| 'ner-pooled' | 4-class Named Entity Recognition (memory inefficient) |  Conll-03  |  **93.24** (F1) |
 | 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
-| 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.6** (Accuracy) |
+| 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
+| 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
+| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |  **47.3** (F1)  |
 | 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
+| 'negation-speculation'  |  Negations and speculations in biomedical articles  |  Bioscope  |  **80.2** (F1) |
 
 
 #### Fast English Models
@@ -96,11 +123,12 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.75** (F1) |
 | 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.27** (F1) |
 | 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.22** (F1) |
-| 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **98.47** (Accuracy) |
+| 'pos-fast' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.1** (Accuracy) |
+| 'upos-fast' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.47** (Accuracy) |
 | 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
 
 
-#### Experimental: Multilingual Models
+#### Multilingual Models
 
 We distribute new models that are capable of handling text in multiple languages within a singular model. 
 
@@ -126,8 +154,13 @@ We also distribute German models.
 | -------------    | ------------- |------------- |------------- |------------- |
 | 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
-| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.33** (Accuracy) | |
-| 'de-pos-fine-grained' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-ner-legal' | NER for German legal text |  [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
+| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.50** (Accuracy) | |
+| 'de-pos-tweets' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-historic-indirect' | historical German speech and thought (indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-direct' | historical German speech and thought (direct) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-reported' | historical German speech and thought (reported) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-free-indirect' | historical German speech and thought (de-historic-free-indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 
 
 #### Models for other Languages
@@ -137,16 +170,18 @@ Thanks to our contributors we are also able to distribute a couple of models for
 | ID | Task | Training Dataset | Accuracy | Contributor |
 | -------------    | ------------- |------------- |------------- |------------- |
 | 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
+| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| 'nl-ner-rnn' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
 | 'da-ner' | Named Entity Recognition |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'ml-upos' | Part-of-Speech Tagging (universal)| 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'pt-pos-clinical' | Part-of-Speech Tagging (fine-grained) for clinical texts | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) |
 
 
 ### Tagging a German sentence
 
-As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
-support German, French, and Dutch other languages are forthcoming. To tag a German sentence, just load the appropriate
-model:
+As indicated in the list above, we also provide pre-trained models for languages other than English. To tag a German sentence, just load the appropriate model:
 
 ```python
 
@@ -242,18 +277,25 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
+from flair.models import SequenceTagger
+from flair.tokenization import SegtokSentenceSplitter
 
-# your text of many sentences
+# example text with many sentences
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# use a library to split into sentences
-from segtok.segmenter import split_single
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
 
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
 
-# predict tags for list of sentences
-tagger: SequenceTagger = SequenceTagger.load('ner')
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
+
+# iterate through sentences and print predicted labels
+for sentence in sentences:
+    print(sentence.to_tagged_string())
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
@@ -263,34 +305,37 @@ tagger. Depending on your resources, you might want to play around with this par
 ## Tagging with Pre-Trained Text Classification Models
 
 Let's use a pre-trained model for detecting positive or negative comments.
-This model was trained over the [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset and can recognize positive
+This model was trained over a mix of product and movie review datasets and can recognize positive
 and negative sentiment in English text.
 
 ```python
 from flair.models import TextClassifier
 
-classifier = TextClassifier.load('en-sentiment')
+# load tagger
+classifier = TextClassifier.load('sentiment')
 ```
 
 All you need to do is use the `predict()` method of the classifier on a sentence. This will add the predicted label to
-the sentence. Lets use a sentence with negative sentiment:
+the sentence. Lets use a sentence with positive sentiment:
 
 ```python
-sentence = Sentence('This film hurts. It is so bad that I am confused.')
+# load tagger
+classifier = TextClassifier.load('sentiment')
 
-# predict NER tags
+# predict for example sentence
+sentence = Sentence("enormously entertaining for moviegoers of any age .")
 classifier.predict(sentence)
 
-# print sentence with predicted labels
-print(sentence.labels)
+# check prediction
+print(sentence)
 ```
 
 This should print:
 ```console
-[NEGATIVE (0.9598667025566101)]
+Sentence: "enormously entertaining for moviegoers of any age ."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
 ```
 
-The number in brackets behind the label is the prediction confidence.
+The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
 
 ### List of Pre-Trained Text Classification Models
 
@@ -300,11 +345,19 @@ are provided:
 
 | ID | Language | Task | Training Dataset | Accuracy |
 | ------------- | ---- | ------------- |------------- |------------- |
-| 'en-sentiment' | English | detecting positive and negative sentiment | movie reviews from [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **90.54** (Micro F1) |
+| 'sentiment' | English | detecting positive and negative sentiment (transformer-based) | movie and product reviews |  **98.87** |
+| 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
+| 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
+## Tagging new classes without training data
+
+In case you need to label classes that are not included you can also try
+our pre-trained zero-shot classifier TARS 
+(skip ahead to the [zero-shot tutorial](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
+TARS can perform text classification for arbitrary classes. 
 
 ## Next 
 
 Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+text. 

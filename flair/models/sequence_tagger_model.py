@@ -1047,7 +1047,7 @@ class SequenceTagger(flair.nn.Model):
             # Italian models
             "it-ner": "https://ml-node-1.showheroes.com/models/ner/it-ner-wikiner-0.4.pt",
             # Dutch models
-            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.6.pt"]),
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.8.pt"]),
             "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
             # Malayalam models
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
